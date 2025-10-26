@@ -1,5 +1,7 @@
 import { useId } from 'react';
-import { Formik, Field, Form, type FormikHelpers } from 'formik';
+import { Formik, Field, Form, type FormikHelpers, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+
 import css from './OrderForm.module.css';
 
 interface OrderFormValues {
@@ -15,10 +17,30 @@ const initialValues: OrderFormValues = {
   username: 'Petro',
   email: 'Peeppa@mail.com',
   deliveryTime: '',
-  deliveryMethod: 'pickup',
+  deliveryMethod: '',
   restrictions: [],
   message: '',
 };
+
+const OrderFormSchema = Yup.object().shape({
+  username: Yup.string()
+    .min(2, 'Name must be at least 2 chracters')
+    .max(30, 'Name is too long')
+    .required('Name is required'),
+  email: Yup.string()
+    .email('Invalid mail adress')
+    .required('Email is required'),
+  deliveryTime: Yup.string()
+    .oneOf(['morning', 'afternoon', 'evening'], 'Invalid deliveryTime value')
+    .required('deliveryTime is required'),
+  deliveryMethod: Yup.string()
+    .oneOf(['pickup', 'courier', 'drone'], 'Invalid delivery method')
+    .required('deliveryMethod is required'),
+  restrictions: Yup.array().of(Yup.string()),
+  message: Yup.string()
+    .min(2, 'Message is too short')
+    .max(300, 'Message is too long'),
+});
 
 export default function OrderForm() {
   const fieldId = useId();
@@ -36,7 +58,11 @@ export default function OrderForm() {
   // values – об’єкт зі значеннями всіх полів форми
   // actions – набір методів, які надає Formik для керування формою.
   return (
-    <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      validationSchema={OrderFormSchema}
+    >
       <Form className={css.form}>
         {/* initialValues – об’єкт початкових значень полів. 
       onSubmit – функція, яка викликається при сабміті форми. */}
@@ -53,6 +79,11 @@ export default function OrderForm() {
             id={`${fieldId}-username`}
             className={css.field}
           />
+          <ErrorMessage
+            name="username"
+            component="span"
+            className={css.error}
+          />
 
           <label htmlFor={`${fieldId}-email`} className={css.label}>
             Email
@@ -63,6 +94,7 @@ export default function OrderForm() {
             id={`${fieldId}-email`}
             className={css.field}
           />
+          <ErrorMessage name="email" component="span" className={css.error} />
         </fieldset>
 
         <label htmlFor={`${fieldId}-deliveryTime`}>
@@ -76,6 +108,11 @@ export default function OrderForm() {
         </Field>
         {/* Щоб змінити HTML-елемент, потрібно передати проп as="назва_тега"
         компоненту Field. */}
+        <ErrorMessage
+          name="deliveryTime"
+          component="span"
+          className={css.error}
+        />
 
         <fieldset className={`${css.fieldset} ${css.delivery}`}>
           <legend className={css.legend}>Choose delivery method:</legend>
@@ -92,6 +129,11 @@ export default function OrderForm() {
             <Field type="radio" name="deliveryMethod" value="drone" />
             Drone delivery
           </label>
+          <ErrorMessage
+            name="deliveryMethod"
+            component="span"
+            className={css.error}
+          />
         </fieldset>
 
         <fieldset className={`${css.fieldset} ${css.restrictions}`}>
@@ -119,6 +161,7 @@ export default function OrderForm() {
           id={`${fieldId}-message`}
           className={css.textarea}
         />
+        <ErrorMessage name="message" component="span" className={css.error} />
 
         <button type="submit" className={css.btn}>
           Place order

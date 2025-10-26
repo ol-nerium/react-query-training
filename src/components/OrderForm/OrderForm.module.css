@@ -57,3 +57,8 @@
 
 .textarea {
 }
+
+.error {
+  color: rgb(245, 24, 24);
+  font-size: 1rem;
+}
